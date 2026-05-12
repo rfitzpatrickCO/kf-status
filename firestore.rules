@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Anyone can read the current pool status; only signed-in staff can write.
+    match /status/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Announcements feed — anyone can read; only signed-in staff can create.
+    // Entries are immutable history (no edits or deletes from the client).
+    match /announcements/{id} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // Push notification tokens — clients write their own; nobody reads from the
+    // browser. The Cloud Function (admin SDK) can read & delete freely.
+    match /tokens/{token} {
+      allow create, update: if true;
+      allow read, delete: if false;
+    }
+  }
+}

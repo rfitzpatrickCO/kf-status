@@ -122,6 +122,21 @@ p { margin: 0; line-height: 1.45; }
 .modal-close:hover { background: var(--neutral); color: var(--ink); }
 .modal-later { margin-top: 1rem; }
 
+.feed-section { display: flex; flex-direction: column; gap: 0.5rem; }
+.feed-section-title { color: var(--primary); font-size: 1.1rem; font-weight: 600;
+  margin: 0.25rem 0 0.25rem; }
+.feed { display: flex; flex-direction: column; gap: 0.5rem; }
+.feed-item { background: var(--white); border-radius: var(--radius-sm); padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-sm); display: grid; grid-template-columns: 32px 1fr;
+  gap: 0.7rem; align-items: start; }
+.feed-item-emoji { font-size: 22px; line-height: 1; padding-top: 1px; }
+.feed-item-title { font-weight: 600; color: var(--primary); font-size: 0.95rem; margin: 0; }
+.feed-item-body { color: var(--ink); font-size: 0.9rem; margin-top: 0.15rem; line-height: 1.4;
+  white-space: pre-wrap; word-wrap: break-word; }
+.feed-item-time { color: var(--ink-soft); font-size: 0.75rem; margin-top: 0.35rem; }
+.feed-empty { color: var(--ink-soft); font-size: 0.9rem; padding: 1rem; text-align: center;
+  background: var(--white); border-radius: var(--radius-sm); border: 1px dashed var(--neutral-200); }
+
 .btn { appearance: none; border: none; background: var(--neutral); color: var(--primary);
   font: inherit; font-weight: 600; padding: 0.7rem 1rem; border-radius: var(--radius-sm);
   cursor: pointer; transition: background 0.15s, transform 0.05s; }
@@ -171,6 +186,11 @@ p { margin: 0; line-height: 1.45; }
       <p id="notif-status" class="muted small" role="status"></p>
     </section>
 
+    <section id="feed-section" class="feed-section hidden" aria-label="Recent updates">
+      <h2 class="feed-section-title">Recent updates</h2>
+      <div id="feed" class="feed"></div>
+    </section>
+
   </main>
 
   <footer class="footer">
@@ -200,11 +220,13 @@ p { margin: 0; line-height: 1.45; }
         if (/maintenance|repair/.test(h)) return "🔧";
         if (/chemical|chlorine|balanc/.test(h)) return "🧪";
         if (/staff|lifeguard/.test(h)) return "👥";
-        if (/event|private/.test(h)) return "🎉";
+        if (/event|party|private/.test(h)) return "🎉";
+        if (/lesson|class/.test(h)) return "🏊";
         if (status === "open") return "🏊";
         if (status === "delayed") return "⏰";
+        if (status === "closed") return "🚫";
         if (status === "info") return "ℹ️";
-        return "🚫";
+        return "📢";
       }
       window.__renderStatus = function (state) {
         var card = document.getElementById("status-card");

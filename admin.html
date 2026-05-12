@@ -96,6 +96,7 @@ label span { font-weight: 500; }
 .status-btn.delay { background: var(--accent-light); border-color: var(--accent); }
 .status-btn.delay .status-btn-title { color: var(--primary); }
 .custom-form { display: flex; flex-direction: column; gap: 0.7rem; }
+.announce-form { display: flex; flex-direction: column; gap: 0.7rem; }
 .staff-actions { display: flex; justify-content: flex-end; }
   </style>
 </head>
@@ -187,6 +188,20 @@ label span { font-weight: 500; }
           <textarea id="custom-detail" maxlength="240" rows="3" placeholder="Optional details for patrons"></textarea>
         </label>
         <button type="submit" class="btn btn-primary btn-block">Publish &amp; notify</button>
+      </form>
+
+      <h3>Post announcement</h3>
+      <p class="muted small">For general news that isn't a status change — events, lessons, reminders. Patrons get a push notification.</p>
+      <form id="announce-form" class="announce-form">
+        <label>
+          <span>Title</span>
+          <input type="text" id="announce-title" maxlength="80" placeholder="e.g. Pool party this Saturday!" required />
+        </label>
+        <label>
+          <span>Details (optional)</span>
+          <textarea id="announce-body" maxlength="240" rows="3" placeholder="Optional details for patrons"></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary btn-block">Publish announcement</button>
       </form>
 
       <div class="staff-actions">

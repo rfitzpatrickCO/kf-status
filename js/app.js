@@ -11,6 +11,8 @@ const meta = document.getElementById("status-meta");
 const notifyCard = document.querySelector(".notify-card");
 const enableBtn = document.getElementById("enable-notifs");
 const notifStatus = document.getElementById("notif-status");
+const feedSection = document.getElementById("feed-section");
+const feedEl = document.getElementById("feed");
 
 // ---------- Status rendering --------------------------------------------------
 
@@ -34,11 +36,69 @@ function pickEmoji(status, headline) {
   if (/maintenance|repair/.test(h)) return "🔧";
   if (/chemical|chlorine|balanc/.test(h)) return "🧪";
   if (/staff|lifeguard/.test(h)) return "👥";
-  if (/event|private/.test(h)) return "🎉";
+  if (/event|party|private/.test(h)) return "🎉";
+  if (/lesson|class/.test(h)) return "🏊";
   if (status === "open") return "🏊";
   if (status === "delayed") return "⏰";
+  if (status === "closed") return "🚫";
   if (status === "info") return "ℹ️";
-  return "🚫";
+  return "📢";
+}
+
+// ---------- Announcements feed ----------------------------------------------
+
+function relativeTime(ts) {
+  if (!ts) return "";
+  const date = ts.toDate ? ts.toDate() : new Date(ts);
+  if (isNaN(date.getTime())) return "";
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.round(diffMs / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin} min ago`;
+  const diffHr = Math.round(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} hr ago`;
+  const diffDay = Math.round(diffHr / 24);
+  if (diffDay < 7) return `${diffDay} day${diffDay > 1 ? "s" : ""} ago`;
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function renderFeedItem(data) {
+  const row = document.createElement("div");
+  row.className = "feed-item";
+  const emoji = pickEmoji(data.status, data.title);
+  const emojiEl = document.createElement("div");
+  emojiEl.className = "feed-item-emoji";
+  emojiEl.setAttribute("aria-hidden", "true");
+  emojiEl.textContent = emoji;
+  const bodyWrap = document.createElement("div");
+  const titleEl = document.createElement("p");
+  titleEl.className = "feed-item-title";
+  titleEl.textContent = data.title || "";
+  bodyWrap.appendChild(titleEl);
+  if (data.body) {
+    const bodyEl = document.createElement("p");
+    bodyEl.className = "feed-item-body";
+    bodyEl.textContent = data.body;
+    bodyWrap.appendChild(bodyEl);
+  }
+  const timeEl = document.createElement("p");
+  timeEl.className = "feed-item-time";
+  timeEl.textContent = relativeTime(data.createdAt);
+  bodyWrap.appendChild(timeEl);
+  row.appendChild(emojiEl);
+  row.appendChild(bodyWrap);
+  return row;
+}
+
+function renderFeed(items) {
+  if (!feedEl || !feedSection) return;
+  if (!items.length) {
+    feedSection.classList.add("hidden");
+    return;
+  }
+  feedSection.classList.remove("hidden");
+  feedEl.innerHTML = "";
+  items.forEach((data) => feedEl.appendChild(renderFeedItem(data)));
 }
 
 function render(state) {
@@ -241,7 +301,15 @@ async function boot() {
   const { initializeApp } = await import(
     `https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-app.js`
   );
-  const { getFirestore, doc, onSnapshot } = await import(
+  const {
+    getFirestore,
+    doc,
+    onSnapshot,
+    collection,
+    query,
+    orderBy,
+    limit,
+  } = await import(
     `https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-firestore.js`
   );
   const { getMessaging, onMessage, isSupported } = await import(
@@ -267,6 +335,24 @@ async function boot() {
       // rather than flashing an error state that overwrites a perfectly good
       // status the user can already see.
       console.error("Firestore error", err);
+    },
+  );
+
+  // Subscribe to the most recent 10 announcements, newest first. Updates
+  // arrive in real time as staff publish — no refresh needed.
+  const feedQuery = query(
+    collection(db, "announcements"),
+    orderBy("createdAt", "desc"),
+    limit(10),
+  );
+  onSnapshot(
+    feedQuery,
+    (snap) => {
+      const items = snap.docs.map((d) => d.data());
+      renderFeed(items);
+    },
+    (err) => {
+      console.error("Announcements feed error", err);
     },
   );
 

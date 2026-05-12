@@ -1,41 +1,36 @@
-// Cloud Function: when status/current changes, send a push notification
-// to every device token stored under tokens/{token}.
+// Cloud Function: when a new announcement is created in Firestore, send a
+// push notification to every device token stored under tokens/{token}.
+//
+// Both status changes and general announcements write to the announcements/
+// collection, so a single trigger covers all cases. The status/current doc
+// is updated separately by the client for the live status card on the
+// customer page — it does not trigger pushes itself.
 //
 // Deploy with:
 //   cd functions && npm install && cd ..
 //   firebase deploy --only functions
 
-const { onDocumentWritten } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { logger } = require("firebase-functions");
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
 
 initializeApp();
 
-exports.notifyOnStatusChange = onDocumentWritten(
-  "status/current",
+exports.notifyOnAnnouncement = onDocumentCreated(
+  "announcements/{id}",
   async (event) => {
-    const after = event.data?.after?.data();
-    const before = event.data?.before?.data();
-    if (!after) {
-      logger.info("No after-data; skipping");
+    const data = event.data?.data();
+    if (!data) {
+      logger.info("No data; skipping");
       return;
     }
 
-    if (
-      before &&
-      before.status === after.status &&
-      before.headline === after.headline &&
-      before.detail === after.detail
-    ) {
-      logger.info("Content unchanged (likely lastNotifiedAt self-write); skipping");
-      return;
-    }
-
-    logger.info("Status changed", {
-      status: after.status,
-      headline: after.headline,
+    logger.info("Announcement created", {
+      title: data.title,
+      type: data.type,
+      status: data.status,
     });
 
     const db = getFirestore();
@@ -44,8 +39,8 @@ exports.notifyOnStatusChange = onDocumentWritten(
     if (tokensSnap.empty) return;
 
     const tokens = tokensSnap.docs.map((d) => d.id);
-    const title = after.headline || "Kelly Farm Pool status update";
-    const body = after.detail || "";
+    const title = data.title || "Kelly Farm Pool update";
+    const body = data.body || "";
 
     const messaging = getMessaging();
     const chunks = [];
@@ -60,14 +55,14 @@ exports.notifyOnStatusChange = onDocumentWritten(
 
     for (const chunk of chunks) {
       // Data-only payload: omitting the top-level `notification` field
-      // prevents FCM from auto-displaying a notification. Our service
-      // worker's onBackgroundMessage handler reads title/body from `data`
-      // and calls showNotification once, so we get exactly one alert
-      // instead of two (one auto + one ours).
+      // prevents FCM from auto-displaying a notification. The client SW's
+      // onBackgroundMessage handler reads title/body from `data` and calls
+      // showNotification once.
       const res = await messaging.sendEachForMulticast({
         tokens: chunk,
         data: {
-          status: String(after.status || ""),
+          type: String(data.type || "announcement"),
+          status: String(data.status || ""),
           title,
           body,
         },
@@ -102,10 +97,5 @@ exports.notifyOnStatusChange = onDocumentWritten(
       );
       logger.info(`Cleaned up ${stale.length} stale tokens`);
     }
-
-    await db.collection("status").doc("current").set(
-      { lastNotifiedAt: FieldValue.serverTimestamp() },
-      { merge: true },
-    );
   },
 );

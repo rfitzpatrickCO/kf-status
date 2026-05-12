@@ -266,6 +266,59 @@ p { margin: 0; line-height: 1.45; }
 .modal-close:hover { background: var(--neutral); color: var(--ink); }
 .modal-later { margin-top: 1rem; }
 
+/* ---------- Announcements feed ---------- */
+.feed-section { display: flex; flex-direction: column; gap: 0.5rem; }
+.feed-section-title {
+  color: var(--primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.25rem 0 0.25rem;
+}
+.feed { display: flex; flex-direction: column; gap: 0.5rem; }
+.feed-item {
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-sm);
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 0.7rem;
+  align-items: start;
+}
+.feed-item-emoji {
+  font-size: 22px;
+  line-height: 1;
+  padding-top: 1px;
+}
+.feed-item-title {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 0.95rem;
+  margin: 0;
+}
+.feed-item-body {
+  color: var(--ink);
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.feed-item-time {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  margin-top: 0.35rem;
+}
+.feed-empty {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  padding: 1rem;
+  text-align: center;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--neutral-200);
+}
+
 /* ---------- Buttons & inputs ---------- */
 .btn {
   appearance: none;
@@ -361,6 +414,7 @@ label span { font-weight: 500; }
 .status-btn.delay .status-btn-title { color: var(--primary); }
 
 .custom-form { display: flex; flex-direction: column; gap: 0.7rem; }
+.announce-form { display: flex; flex-direction: column; gap: 0.7rem; }
 .staff-actions { display: flex; justify-content: flex-end; }
 
 /* ---------- Responsive tweaks ---------- */

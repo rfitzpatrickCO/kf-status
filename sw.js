@@ -2,7 +2,7 @@
 // and updates promptly when files change. FCM background messages are handled
 // by firebase-messaging-sw.js (registered separately by the Firebase SDK).
 
-const CACHE_VERSION = "kfpool-v5";
+const CACHE_VERSION = "kfpool-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
